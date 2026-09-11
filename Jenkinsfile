@@ -44,9 +44,9 @@ pipeline {
                     string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')
                 ]) {
                     sh '''
-                        npm install sonarqube-scanner
+                        npm install --no-save sonarqube-scanner@5.0.0
 
-                        ./node_modules/.bin/sonar-scanner \
+                        ./node_modules/.bin/sonar-scanner-npm \
                           -Dsonar.projectKey=8.2CDevSecOps \
                           -Dsonar.organization=gargisharma-ops358 \
                           -Dsonar.host.url=https://sonarcloud.io \
