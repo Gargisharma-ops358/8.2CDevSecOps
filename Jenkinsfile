@@ -1,46 +1,58 @@
 pipeline {
     agent any
 
+    environment {
+        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    }
+
     stages {
-        stage('Build') {
+
+        stage('Checkout') {
             steps {
-                echo 'Build: Compile and package code using Maven'
+                git branch: 'main',
+                    url: 'https://github.com/Gargisharma-ops358/8.2CDevSecOps.git'
             }
         }
 
-        stage('Unit and Integration Tests') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Testing: Run unit and integration tests using JUnit'
+                sh 'npm install'
             }
         }
 
-        stage('Code Analysis') {
+        stage('Run Tests') {
             steps {
-                echo 'Code Analysis: Analyse code using SonarQube'
+                sh 'npm test || true'
             }
         }
 
-        stage('Security Scan') {
+        stage('Generate Coverage Report') {
             steps {
-                echo 'Security Scan: Scan for vulnerabilities using Snyk'
+                sh 'npm run coverage || true'
             }
         }
 
-        stage('Deploy to Staging') {
+        stage('NPM Audit (Security Scan)') {
             steps {
-                echo 'Deploy to Staging: Deploy application to AWS EC2 staging server'
+                sh 'npm audit || true'
             }
         }
 
-        stage('Integration Tests on Staging') {
+        stage('SonarCloud Analysis') {
             steps {
-                echo 'Staging Tests: Run integration tests using Selenium'
-            }
-        }
+                withCredentials([
+                    string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')
+                ]) {
+                    sh '''
+                        npm install -g sonarqube-scanner
 
-        stage('Deploy to Production') {
-            steps {
-                echo 'Deploy to Production: Deploy application to AWS EC2 production server'
+                        sonar-scanner \
+                          -Dsonar.projectKey=8.2CDevSecOps \
+                          -Dsonar.organization=gargisharma-ops358 \
+                          -Dsonar.host.url=https://sonarcloud.io \
+                          -Dsonar.token=$SONAR_TOKEN
+                    '''
+                }
             }
         }
     }
